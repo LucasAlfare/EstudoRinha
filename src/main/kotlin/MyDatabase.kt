@@ -8,8 +8,17 @@ import java.util.*
 object MyDatabase {
 
   init {
+    Database.connect(
+      url = "jdbc:postgresql://localhost:5433/",
+      driver = "org.postgresql.Driver",
+      user = "postgres",
+      password = "5411459"
+    )
+
+    transaction { SchemaUtils.drop(PessoasTable, ConcatenationsTable) } // tmp
+
     transaction {
-      SchemaUtils.createMissingTablesAndColumns(PessoasTable)
+      SchemaUtils.createMissingTablesAndColumns(PessoasTable, ConcatenationsTable)
     }
   }
 
@@ -23,15 +32,25 @@ object MyDatabase {
       }?.value
     }
 
-    return Result(
-      code = if (createdPessoaId == null) HttpStatusCode.UnprocessableEntity else HttpStatusCode.Created,
-      data = createdPessoaId
-    )
+    if (createdPessoaId != null) {
+      transaction {
+        ConcatenationsTable.insert {
+          it[nomeApelidoStack] = buildString {
+            append(pessoaDTO.nome)
+            append(pessoaDTO.apelido)
+            pessoaDTO.stack?.forEach { item -> append(item) }
+          }
+          it[pessoaId] = createdPessoaId
+        }
+      }
+
+      return Result(code = HttpStatusCode.Created, data = createdPessoaId)
+    }
+
+    return Result(code = HttpStatusCode.UnprocessableEntity, null)
   }
 
   fun getPessoaById(id: UUID): Result<Pessoa?> {
-    // TODO: check if DB contains some "Pessoa" with [id] value
-
     val search = transaction {
       PessoasTable.select {
         PessoasTable.id eq id
@@ -40,6 +59,34 @@ object MyDatabase {
 
     if (search == null) return Result(HttpStatusCode.NotFound, null)
     return Result(HttpStatusCode.OK, search)
+  }
+
+  fun searchPessoasByTerm(term: String): Result<MutableSet<Pessoa>> {
+    // TODO: check performance for the following "double SELECT"...
+    val relatedPessoaId = transaction {
+      ConcatenationsTable.select {
+        ConcatenationsTable.nomeApelidoStack like "%$term%"
+      }.map { it[ConcatenationsTable.pessoaId] }
+    }
+
+    val relatedPessoas = transaction {
+      val searches = mutableSetOf<Pessoa>()
+      relatedPessoaId.forEach {
+        searches += PessoasTable.select { PessoasTable.id eq it }.single().toPessoa()
+      }
+
+      searches
+    }
+
+    return Result(code = HttpStatusCode.OK, data = relatedPessoas)
+  }
+
+  fun pessoasCount(): Result<String> {
+    val countText = transaction {
+      PessoasTable.selectAll().count().toString()
+    }
+
+    return Result(HttpStatusCode.OK, countText)
   }
 }
 

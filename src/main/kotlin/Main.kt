@@ -10,21 +10,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 fun main() {
-  Database.connect(
-    url = "jdbc:postgresql://localhost:5433/",
-    driver = "org.postgresql.Driver",
-    user = "postgres",
-    password = "5411459"
-  )
-
-  transaction { SchemaUtils.drop(PessoasTable) } // tmp
-
   embeddedServer(
     Netty,
     port = 8080,
@@ -35,6 +23,7 @@ fun main() {
 
 fun Application.myApp() {
   install(ContentNegotiation) {
+    // TODO: update "isLenient" configuration
     json()
   }
 
@@ -61,7 +50,7 @@ fun Application.configureRouting() {
 
         call.respond(result.code)
       }.onFailure {
-        call.respond(HttpStatusCode.BadRequest)
+        call.respond(HttpStatusCode.BadRequest, it.message ?: "error")
       }
     }
 
@@ -69,6 +58,7 @@ fun Application.configureRouting() {
     exemplo de request para teste:
 
     curl -v http://127.0.0.1:8080/pessoas/UUID
+    auxUUID = 01955196-2f8e-4678-8d42-859b309ec8f8
      */
     get("/pessoas/{id}") {
       val requestId = call.parameters["id"]!!
@@ -79,7 +69,28 @@ fun Application.configureRouting() {
         call.respond(result.code, result.data)
       }
     }
+
+    /*
+    curl -v http://127.0.0.1:8080/pessoas/t=
+     */
+    get("/pessoas/t={termo}") {
+      runCatching {
+        val term = call.parameters["termo"]!!
+        if (term.isEmpty()) return@get call.respond(HttpStatusCode.BadRequest)
+
+        val result = MyDatabase.searchPessoasByTerm(term)
+        call.respond(HttpStatusCode.OK, result.data)
+      }.onFailure {
+        call.respond(HttpStatusCode.BadRequest, it.message ?: "error")
+      }
+    }
+
+    /*
+    curl -v http://127.0.0.1:8080/contagem-pessoas
+     */
+    get("/contagem-pessoas") {
+      val result = MyDatabase.pessoasCount()
+      call.respond(result.code, result.data)
+    }
   }
 }
-
-//01955196-2f8e-4678-8d42-859b309ec8f8
