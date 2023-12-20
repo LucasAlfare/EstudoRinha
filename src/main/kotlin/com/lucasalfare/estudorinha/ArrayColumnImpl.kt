@@ -1,5 +1,5 @@
 /**
- * @author MrPowerGammerBr
+ * @author MrPowerGamerBr
  */
 package com.lucasalfare.estudorinha
 
