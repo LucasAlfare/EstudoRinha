@@ -8,6 +8,10 @@ import java.util.*
 object MyDatabase {
 
   init {
+    initialize()
+  }
+
+  fun initialize() {
     Database.connect(
       url = "jdbc:postgresql://localhost:5433/",
       driver = "org.postgresql.Driver",
