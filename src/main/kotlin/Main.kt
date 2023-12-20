@@ -26,6 +26,7 @@ fun main() {
         json()
       }
 
+      // Routes definitions here
       routing {
         /*
         exemplo de request para teste:
