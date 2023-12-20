@@ -10,7 +10,14 @@ import kotlinx.serialization.UseSerializers
 import java.util.*
 
 /**
- * Auxiliary model to automatic deserialize incoming JSON requests.
+ * Data Transfer Object (DTO) representing a person with optional technology stack.
+ *
+ * @property nome The name of the person.
+ * @property apelido The nickname of the person.
+ * @property nascimento The date of birth of the person (in the format [yyyy-MM-dd]).
+ * @property stack An array of technologies associated with the person.
+ *
+ * @throws IllegalArgumentException if any of the validation checks fail during object initialization.
  */
 @Serializable
 data class PessoaDTO(
@@ -20,26 +27,31 @@ data class PessoaDTO(
   val stack: Array<String>?
 ) {
 
-  /**
-   * Validates the properties on instantiation.
-   */
   init {
-    // checks for nulls
+    // Checks for null values.
     requireNotNull(nome)
     requireNotNull(apelido)
     requireNotNull(nascimento)
 
-    // checks for challenge requirements
+    // Checks for challenge requirements.
     require(nome.length in 1..100)
     require(apelido.length in 1..32)
 
-    // custom checks for date format
+    // Custom checks for date format.
     require(validateNascimento(nascimento))
 
-    // checks for each item of the deserialized list
+    // Checks for each item of the deserialized list.
     stack?.forEach { require(it.length in 1..32) }
   }
 
+  // Override equals and hashCode for proper data comparison.
+
+  /**
+   * Compares this object to another for equality.
+   *
+   * @param other The other object to compare with.
+   * @return `true` if the objects are equal, `false` otherwise.
+   */
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
@@ -57,6 +69,11 @@ data class PessoaDTO(
     return true
   }
 
+  /**
+   * Generates a hash code for this object.
+   *
+   * @return The hash code value.
+   */
   override fun hashCode(): Int {
     var result = nome?.hashCode() ?: 0
     result = 31 * result + (apelido?.hashCode() ?: 0)
@@ -67,7 +84,15 @@ data class PessoaDTO(
 }
 
 /**
- * The persistable model of "Pessoa".
+ * Data class representing a person with a unique identifier and optional technology stack.
+ *
+ * @property id The unique identifier of the person.
+ * @property nome The name of the person.
+ * @property apelido The nickname of the person.
+ * @property nascimento The date of birth of the person (in the format [yyyy-MM-dd]).
+ * @property stack An array of technologies associated with the person.
+ *
+ * @throws IllegalArgumentException if any of the validation checks fail during object initialization.
  */
 @Serializable
 data class Pessoa(
@@ -77,6 +102,14 @@ data class Pessoa(
   val nascimento: String,
   val stack: Array<String>?
 ) {
+  // Override equals and hashCode for proper data comparison.
+
+  /**
+   * Compares this object to another for equality.
+   *
+   * @param other The other object to compare with.
+   * @return `true` if the objects are equal, `false` otherwise.
+   */
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
@@ -95,6 +128,11 @@ data class Pessoa(
     return true
   }
 
+  /**
+   * Generates a hash code for this object.
+   *
+   * @return The hash code value.
+   */
   override fun hashCode(): Int {
     var result = id.hashCode()
     result = 31 * result + nome.hashCode()
@@ -106,19 +144,20 @@ data class Pessoa(
 }
 
 /**
- * Scratch function to check and validate if string matches the desired fixed format.
+ * Validates a date string to ensure it matches the fixed format: [yyyy-MM-dd].
  *
- * format: [yyyy-MM-dd]
+ * @param nascimento The date string to be validated.
+ * @return `true` if the date string is valid, `false` otherwise.
  *
- * Is [StringBuilder] useful in order to avoid literal strings allocations?
+ * Note: The use of [StringBuilder] aims to minimize literal string allocations during validation.
  */
 private fun validateNascimento(nascimento: String): Boolean {
-  // dates should be always in fixed size, if not, just finishes
+  // Dates should always have a fixed size; if not, validation fails.
   if (nascimento.length != 10) return false
 
   val auxBuilder = StringBuilder()
 
-  // checks if "year" exists in first 4 chars
+  // Checks if "year" exists in the first 4 characters.
   if (
     auxBuilder
       .append(nascimento[0])
@@ -129,12 +168,12 @@ private fun validateNascimento(nascimento: String): Boolean {
       .toIntOrNull() == null
   ) return false
 
-  // check for the following separator
+  // Checks for the following separator.
   if (nascimento[4] != '-') return false
 
   auxBuilder.clear()
 
-  // checks if "month" exists in following 2 chars
+  // Checks if "month" exists in the following 2 characters.
   if (
     auxBuilder
       .append(nascimento[5])
@@ -143,12 +182,12 @@ private fun validateNascimento(nascimento: String): Boolean {
       .toIntOrNull() == null
   ) return false
 
-  // check for the second separator
+  // Checks for the second separator.
   if (nascimento[7] != '-') return false
 
   auxBuilder.clear()
 
-  // last check, for the "day"
+  // Last check for the "day".
   return auxBuilder
     .append(nascimento[8])
     .append(nascimento[9])

@@ -5,12 +5,14 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
+/**
+ * Singleton object representing the application's database.
+ */
 object MyDatabase {
 
-  init {
-    initialize()
-  }
-
+  /**
+   * Initializes the database connection and creates tables if they don't exist.
+   */
   fun initialize() {
     Database.connect(
       url = "jdbc:postgresql://localhost:5433/",
@@ -26,6 +28,12 @@ object MyDatabase {
     }
   }
 
+  /**
+   * Creates a new person in the database.
+   *
+   * @param pessoaDTO The data transfer object containing information about the person.
+   * @return Result object with the HTTP status code and the ID of the created person.
+   */
   fun createPessoa(pessoaDTO: PessoaDTO): Result<UUID?> {
     val createdPessoaId = transaction {
       PessoasTable.insertIgnoreAndGetId {
@@ -51,6 +59,12 @@ object MyDatabase {
     } ?: Result(code = HttpStatusCode.UnprocessableEntity, null)
   }
 
+  /**
+   * Retrieves a person by their ID from the database.
+   *
+   * @param id The ID of the person to retrieve.
+   * @return Result object with the HTTP status code and the retrieved person.
+   */
   fun getPessoaById(id: UUID): Result<Pessoa?> {
     val search = transaction {
       PessoasTable.select {
@@ -61,6 +75,12 @@ object MyDatabase {
     return search?.let { Result(HttpStatusCode.OK, search) } ?: Result(HttpStatusCode.NotFound, null)
   }
 
+  /**
+   * Searches for people in the database based on a search term.
+   *
+   * @param term The search term.
+   * @return Result object with the HTTP status code and a list of matching people.
+   */
   fun searchPessoasByTerm(term: String): Result<List<Pessoa>> {
     // TODO: check performance for the following "double SELECT"...
     val relatedPessoasIds = transaction {
@@ -81,6 +101,11 @@ object MyDatabase {
     return Result(code = HttpStatusCode.OK, data = relatedPessoas)
   }
 
+  /**
+   * Retrieves the count of people in the database.
+   *
+   * @return Result object with the HTTP status code and the count of people as a string.
+   */
   fun pessoasCount(): Result<String> {
     val countText = transaction {
       PessoasTable.selectAll().count().toString()
@@ -90,6 +115,9 @@ object MyDatabase {
   }
 }
 
+/**
+ * Extension function to convert a [ResultRow] to a [Pessoa] object.
+ */
 fun ResultRow.toPessoa(): Pessoa {
   return Pessoa(
     id = this[PessoasTable.id].value,
