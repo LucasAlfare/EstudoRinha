@@ -1,6 +1,7 @@
 package com.lucasalfare
 
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.TextColumnType
 
 object PessoasTable : UUIDTable("Pessoas") {
@@ -10,7 +11,7 @@ object PessoasTable : UUIDTable("Pessoas") {
   val stack = array<String>("stack", TextColumnType())
 }
 
-object ConcatenationsTable : UUIDTable() {
+object ConcatenationsTable : Table("Concatenations") {
   val nomeApelidoStack = text("nome_apelido_stack")
   val pessoaId = uuid("pessoa_id").references(PessoasTable.id)
 }
