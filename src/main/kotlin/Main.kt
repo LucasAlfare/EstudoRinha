@@ -22,8 +22,14 @@ fun main() {
     host = "0.0.0.0",
     module = {
       install(ContentNegotiation) {
-        // TODO: update "isLenient" configuration
-        json()
+        // now JSON parser is not "lenient" about weird things, such as
+        // parsing to string a malformed JSON array.
+        // (e.g.: '["string1", "str", 32]' -> the number 32 is not turned into string.
+        json(
+          json = Json {
+            isLenient = false
+          }
+        )
       }
 
       // Routes definitions here
@@ -31,12 +37,11 @@ fun main() {
         /*
         exemplo de request para teste:
 
-        curl -v -d '{"apelido": "lucas", "nome": "francisco lucas", "nascimento": "9999-99-99", "stack": ["kotlin"] }' -H 'Content-Type: application/json' http://127.0.0.1:8080/pessoas
+        curl -v -d '{"apelido": "lucas", "nome": "francisco lucas", "nascimento": "9999-99-99", "stack": ["kotlin", 1] }' -H 'Content-Type: application/json' http://127.0.0.1:8080/pessoas
          */
         post("/pessoas") {
           runCatching {
-            // using directly [kotlinx.serialization.json.Json] to avoid wrong parsing of req stacks array
-            val pessoaDTO = Json.decodeFromString<PessoaDTO>(call.receiveText())
+            val pessoaDTO = call.receive<PessoaDTO>()
             val result = MyDatabase.createPessoa(pessoaDTO)
 
             call.response.headers.append(
