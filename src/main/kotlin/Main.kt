@@ -10,18 +10,30 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 fun main() {
+  Database.connect(
+    url = "jdbc:postgresql://localhost:5433/",
+    driver = "org.postgresql.Driver",
+    user = "postgres",
+    password = "5411459"
+  )
+
+  transaction { SchemaUtils.drop(PessoasTable) } // tmp
+
   embeddedServer(
     Netty,
     port = 8080,
     host = "0.0.0.0",
-    module = Application::myModule
+    module = Application::myApp
   ).start(wait = true)
 }
 
-fun Application.myModule() {
+fun Application.myApp() {
   install(ContentNegotiation) {
     json()
   }
@@ -34,31 +46,33 @@ fun Application.configureRouting() {
     /*
     exemplo de request para teste:
 
-    curl -v -d '{"apelido": "lucas", "nome": "francisco lucas", "nascimento": "1994-10-18", "stack": ["kotlin"] }' -H 'Content-Type: application/json' http://127.0.0.1:8080/pessoas
+    curl -v -d '{"apelido": "lucas", "nome": "francisco lucas", "nascimento": "9999-99-99", "stack": ["kotlin"] }' -H 'Content-Type: application/json' http://127.0.0.1:8080/pessoas
      */
     post("/pessoas") {
       runCatching {
-//        val pessoaDTO = call.receive<PessoaDTO>() // WHY THIS parses "correctly" the case of JSON '{"apelido": "nicknick", "nome": "Nick Nickian", "nascimento": "1994-10-18", "stack": [1, "java", "kotlin"] }'
+        // using directly [kotlinx.serialization.json.Json] to avoid wrong parsing of req stacks array
         val pessoaDTO = Json.decodeFromString<PessoaDTO>(call.receiveText())
-        val result = Database.createPessoa(pessoaDTO)
-        call.response.headers.append(name = HttpHeaders.Location, value = "/pessoas/${result.data}")
+        val result = MyDatabase.createPessoa(pessoaDTO)
+
+        call.response.headers.append(
+          name = HttpHeaders.Location,
+          value = "/pessoas/${result.data}"
+        )
+
         call.respond(result.code)
       }.onFailure {
-        call.respond(
-          HttpStatusCode.BadRequest,
-//          message = it.message ?: "ok!"
-        )
+        call.respond(HttpStatusCode.BadRequest)
       }
     }
 
     /*
     exemplo de request para teste:
 
-    curl -v http://127.0.0.1:8080/pessoas/{UUID}
+    curl -v http://127.0.0.1:8080/pessoas/UUID
      */
     get("/pessoas/{id}") {
       val requestId = call.parameters["id"]!!
-      val result = Database.getPessoaById(UUID.fromString(requestId))
+      val result = MyDatabase.getPessoaById(UUID.fromString(requestId))
       if (result.data == null) {
         call.respond(result.code)
       } else {
@@ -67,3 +81,5 @@ fun Application.configureRouting() {
     }
   }
 }
+
+//01955196-2f8e-4678-8d42-859b309ec8f8

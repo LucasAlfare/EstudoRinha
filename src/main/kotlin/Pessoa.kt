@@ -17,7 +17,7 @@ data class PessoaDTO(
   val nome: String?,
   val apelido: String?,
   val nascimento: String?,
-  val stack: List<String>?
+  val stack: Array<String>?
 ) {
 
   /**
@@ -39,6 +39,31 @@ data class PessoaDTO(
     // checks for each item of the deserialized list
     stack?.forEach { require(it.length in 1..32) }
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as PessoaDTO
+
+    if (nome != other.nome) return false
+    if (apelido != other.apelido) return false
+    if (nascimento != other.nascimento) return false
+    if (stack != null) {
+      if (other.stack == null) return false
+      if (!stack.contentEquals(other.stack)) return false
+    } else if (other.stack != null) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = nome?.hashCode() ?: 0
+    result = 31 * result + (apelido?.hashCode() ?: 0)
+    result = 31 * result + (nascimento?.hashCode() ?: 0)
+    result = 31 * result + (stack?.contentHashCode() ?: 0)
+    return result
+  }
 }
 
 /**
@@ -50,8 +75,35 @@ data class Pessoa(
   val nome: String,
   val apelido: String,
   val nascimento: String,
-  val stack: List<String>?
-)
+  val stack: Array<String>?
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as Pessoa
+
+    if (id != other.id) return false
+    if (nome != other.nome) return false
+    if (apelido != other.apelido) return false
+    if (nascimento != other.nascimento) return false
+    if (stack != null) {
+      if (other.stack == null) return false
+      if (!stack.contentEquals(other.stack)) return false
+    } else if (other.stack != null) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = id.hashCode()
+    result = 31 * result + nome.hashCode()
+    result = 31 * result + apelido.hashCode()
+    result = 31 * result + nascimento.hashCode()
+    result = 31 * result + (stack?.contentHashCode() ?: 0)
+    return result
+  }
+}
 
 /**
  * Scratch function to check and validate if string matches the desired fixed format.
@@ -61,10 +113,10 @@ data class Pessoa(
  * Is [StringBuilder] useful in order to avoid literal strings allocations?
  */
 private fun validateNascimento(nascimento: String): Boolean {
-  val auxBuilder = StringBuilder()
-
   // dates should be always in fixed size, if not, just finishes
   if (nascimento.length != 10) return false
+
+  val auxBuilder = StringBuilder()
 
   // checks if "year" exists in first 4 chars
   if (

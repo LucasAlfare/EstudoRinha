@@ -24,6 +24,10 @@ dependencies {
   // isso aqui serve apenas para gerar os logs da engine do servidor...
   implementation("ch.qos.logback:logback-classic:1.4.8")
 
+  implementation("org.jetbrains.exposed:exposed-core:0.45.0")
+  implementation("org.jetbrains.exposed:exposed-jdbc:0.45.0")
+  implementation("org.postgresql:postgresql:42.6.0")
+
   testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
 
