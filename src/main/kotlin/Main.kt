@@ -9,7 +9,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import java.util.*
 
 fun main() {
@@ -32,20 +32,28 @@ fun Application.myModule() {
 fun Application.configureRouting() {
   routing {
     /*
-    curl -v -d '{"apelido": 1, "nome": "francisco lucas", "nascimento": "1994-10-18", "stack": ["kotlin"] }' -H 'Content-Type: application/json' http://127.0.0.1:8080/pessoas
+    exemplo de request para teste:
+
+    curl -v -d '{"apelido": "lucas", "nome": "francisco lucas", "nascimento": "1994-10-18", "stack": ["kotlin"] }' -H 'Content-Type: application/json' http://127.0.0.1:8080/pessoas
      */
     post("/pessoas") {
-      try {
-        val pessoaDTO = call.receive<PessoaDTO>()
+      runCatching {
+//        val pessoaDTO = call.receive<PessoaDTO>() // WHY THIS parses "correctly" the case of JSON '{"apelido": "nicknick", "nome": "Nick Nickian", "nascimento": "1994-10-18", "stack": [1, "java", "kotlin"] }'
+        val pessoaDTO = Json.decodeFromString<PessoaDTO>(call.receiveText())
         val result = Database.createPessoa(pessoaDTO)
         call.response.headers.append(name = HttpHeaders.Location, value = "/pessoas/${result.data}")
         call.respond(result.code)
-      } catch (e: SerializationException) {
-        call.respond(HttpStatusCode.BadRequest)
+      }.onFailure {
+        call.respond(
+          HttpStatusCode.BadRequest,
+//          message = it.message ?: "ok!"
+        )
       }
     }
 
     /*
+    exemplo de request para teste:
+
     curl -v http://127.0.0.1:8080/pessoas/{UUID}
      */
     get("/pessoas/{id}") {

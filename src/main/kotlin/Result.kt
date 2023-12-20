@@ -1,6 +1,8 @@
 package com.lucasalfare
 
-data class Result<TCode, TResult>(
-  val code: TCode,
+import io.ktor.http.*
+
+data class Result<TResult>(
+  val code: HttpStatusCode,
   val data: TResult
 )

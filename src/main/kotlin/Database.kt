@@ -7,24 +7,7 @@ object Database {
 
   private val tmpData = mutableListOf<Pessoa>()
 
-  fun createPessoa(pessoaDTO: PessoaDTO): Result<HttpStatusCode, UUID?> {
-    // validates nullability of properties
-    if (
-      pessoaDTO.nome == null ||
-      pessoaDTO.apelido == null ||
-      pessoaDTO.nascimento == null
-    ) {
-      return Result(code = HttpStatusCode.UnprocessableEntity, data = null)
-    }
-
-    // validates "nome" and "apelido" lengths
-    if (
-      pessoaDTO.nome.length > 100 ||
-      pessoaDTO.apelido.length > 32
-    ) {
-      return Result(code = HttpStatusCode.UnprocessableEntity, null)
-    }
-
+  fun createPessoa(pessoaDTO: PessoaDTO): Result<UUID?> {
     // TODO: validates when "apelido" is not unique in DB (return same above)
 
     if (tmpData.any { it.apelido == pessoaDTO.apelido }) {
@@ -33,9 +16,9 @@ object Database {
 
     val createdPessoa = Pessoa(
       id = UUID.randomUUID(),
-      nome = pessoaDTO.nome,
-      apelido = pessoaDTO.apelido,
-      nascimento = pessoaDTO.nascimento,
+      nome = pessoaDTO.nome!!,
+      apelido = pessoaDTO.apelido!!,
+      nascimento = pessoaDTO.nascimento!!,
       stack = pessoaDTO.stack
     )
 
@@ -46,7 +29,7 @@ object Database {
     return Result(code = HttpStatusCode.Created, createdPessoa.id)
   }
 
-  fun getPessoaById(id: UUID): Result<HttpStatusCode, Pessoa?> {
+  fun getPessoaById(id: UUID): Result<Pessoa?> {
     // TODO: check if DB contains some "Pessoa" with [id] value
 
     val search = tmpData.find { it.id == id }
