@@ -32,7 +32,7 @@ object MyDatabase {
       }?.value
     }
 
-    if (createdPessoaId != null) {
+    return createdPessoaId?.let {
       transaction {
         ConcatenationsTable.insert {
           it[nomeApelidoStack] = buildString {
@@ -42,12 +42,9 @@ object MyDatabase {
           }
           it[pessoaId] = createdPessoaId
         }
+        Result(code = HttpStatusCode.Created, data = createdPessoaId)
       }
-
-      return Result(code = HttpStatusCode.Created, data = createdPessoaId)
-    }
-
-    return Result(code = HttpStatusCode.UnprocessableEntity, null)
+    } ?: Result(code = HttpStatusCode.UnprocessableEntity, null)
   }
 
   fun getPessoaById(id: UUID): Result<Pessoa?> {
@@ -57,13 +54,12 @@ object MyDatabase {
       }.singleOrNull()
     }?.toPessoa()
 
-    if (search == null) return Result(HttpStatusCode.NotFound, null)
-    return Result(HttpStatusCode.OK, search)
+    return search?.let { Result(HttpStatusCode.OK, search) } ?: Result(HttpStatusCode.NotFound, null)
   }
 
   fun searchPessoasByTerm(term: String): Result<MutableSet<Pessoa>> {
     // TODO: check performance for the following "double SELECT"...
-    val relatedPessoaId = transaction {
+    val relatedPessoasIds = transaction {
       ConcatenationsTable.select {
         ConcatenationsTable.nomeApelidoStack like "%$term%"
       }.map { it[ConcatenationsTable.pessoaId] }
@@ -71,7 +67,7 @@ object MyDatabase {
 
     val relatedPessoas = transaction {
       val searches = mutableSetOf<Pessoa>()
-      relatedPessoaId.forEach {
+      relatedPessoasIds.forEach {
         searches += PessoasTable.select { PessoasTable.id eq it }.single().toPessoa()
       }
 
