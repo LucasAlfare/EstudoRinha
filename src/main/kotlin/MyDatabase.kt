@@ -57,7 +57,7 @@ object MyDatabase {
     return search?.let { Result(HttpStatusCode.OK, search) } ?: Result(HttpStatusCode.NotFound, null)
   }
 
-  fun searchPessoasByTerm(term: String): Result<MutableSet<Pessoa>> {
+  fun searchPessoasByTerm(term: String): Result<List<Pessoa>> {
     // TODO: check performance for the following "double SELECT"...
     val relatedPessoasIds = transaction {
       ConcatenationsTable.select {
@@ -66,7 +66,7 @@ object MyDatabase {
     }
 
     val relatedPessoas = transaction {
-      val searches = mutableSetOf<Pessoa>()
+      val searches = mutableListOf<Pessoa>()
       relatedPessoasIds.forEach {
         searches += PessoasTable.select { PessoasTable.id eq it }.single().toPessoa()
       }
