@@ -1,4 +1,4 @@
-package com.lucasalfare.serialization
+package com.lucasalfare.estudorinha.serialization
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

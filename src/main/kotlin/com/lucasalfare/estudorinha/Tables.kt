@@ -1,4 +1,4 @@
-package com.lucasalfare
+package com.lucasalfare.estudorinha
 
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Table

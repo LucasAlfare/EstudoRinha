@@ -2,9 +2,9 @@
   UUIDSerializer::class
 )
 
-package com.lucasalfare
+package com.lucasalfare.estudorinha
 
-import com.lucasalfare.serialization.UUIDSerializer
+import com.lucasalfare.estudorinha.serialization.UUIDSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.util.*

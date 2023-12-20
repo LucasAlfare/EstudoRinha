@@ -1,7 +1,7 @@
 /**
  * @author MrPowerGammerBr
  */
-package com.lucasalfare
+package com.lucasalfare.estudorinha
 
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType

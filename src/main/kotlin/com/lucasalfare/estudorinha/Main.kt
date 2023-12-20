@@ -1,4 +1,4 @@
-package com.lucasalfare
+package com.lucasalfare.estudorinha
 
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
