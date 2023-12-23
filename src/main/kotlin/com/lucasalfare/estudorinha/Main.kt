@@ -14,16 +14,20 @@ import java.util.*
 
 /**
  * Main function to start the web server and define API routes.
+ *
+ * cmd: cls; ./gradlew clean; ./gradlew jar; docker rmi -f apenas_estudo; docker rmi -f postgres; docker rm postgres-container; docker rm estudo-container; docker build -t apenas_estudo .; docker compose up
  */
 fun main() {
   // Initializes the database before starting the web server.
-  MyDatabase.initialize()
+  MyDatabase.initialize(
+    username = System.getenv("POSTGRES_USER"),
+    password = System.getenv("POSTGRES_PASSWORD")
+  )
 
   // Starts the embedded web server using Netty.
   embeddedServer(
     Netty,
     port = 8080,
-    host = "0.0.0.0",
     module = {
       // Installs Content Negotiation with a non-lenient JSON parser.
       install(ContentNegotiation) {

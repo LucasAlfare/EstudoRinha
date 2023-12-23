@@ -1,0 +1,24 @@
+version: '3.1'
+
+services:
+
+  estudoRinhaService:
+    image: apenas_estudo
+    container_name: "estudo-container"
+    depends_on:
+      - dbService
+    ports:
+      - "8080:8080"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password_1234
+
+  dbService:
+    container_name: "postgres-container"
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password_1234

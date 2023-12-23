@@ -1,6 +1,11 @@
 plugins {
   kotlin("jvm") version "1.9.21"
   kotlin("plugin.serialization") version "1.9.21"
+
+  /*
+  "application" plugin was introduced in order to correctly build the Kotlin project.
+   */
+  application
 }
 
 group = "com.lucasalfare"
@@ -22,7 +27,7 @@ dependencies {
   implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
   // isso aqui serve apenas para gerar os logs da engine do servidor...
-  implementation("ch.qos.logback:logback-classic:1.4.8")
+  implementation("ch.qos.logback:logback-classic:1.4.12")
 
   implementation("org.jetbrains.exposed:exposed-core:0.45.0")
   implementation("org.jetbrains.exposed:exposed-jdbc:0.45.0")
@@ -37,4 +42,23 @@ tasks.test {
 
 kotlin {
   jvmToolchain(17)
+}
+
+application {
+  mainClass.set("com.lucasalfare.estudorinha.MainKt")
+}
+
+/*
+This specifies a custom task when creating a ".jar" for this project.
+The main thing is to define manifest and the fixing classpath stuff.
+ */
+tasks.withType<Jar> {
+  manifest {
+    attributes["Main-Class"] = "com.lucasalfare.estudorinha.MainKt"
+  }
+
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  configurations["compileClasspath"].forEach { file: File ->
+    from(zipTree(file.absoluteFile))
+  }
 }

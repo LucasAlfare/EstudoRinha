@@ -13,15 +13,18 @@ object MyDatabase {
   /**
    * Initializes the database connection and creates tables if they don't exist.
    */
-  fun initialize() {
+  fun initialize(
+    username: String,
+    password: String
+  ) {
     Database.connect(
-      url = "jdbc:postgresql://localhost:5433/",
+      url = "jdbc:postgresql://localhost:5432/",
       driver = "org.postgresql.Driver",
-      user = "postgres",
-      password = "5411459"
+      user = username,
+      password = password
     )
 
-    transaction { SchemaUtils.drop(PessoasTable, ConcatenationsTable) } // tmp
+//    transaction { SchemaUtils.drop(PessoasTable, ConcatenationsTable) } // tmp
 
     transaction {
       SchemaUtils.createMissingTablesAndColumns(PessoasTable, ConcatenationsTable)
