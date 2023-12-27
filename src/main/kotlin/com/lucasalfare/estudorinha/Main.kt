@@ -14,14 +14,14 @@ import java.util.*
 
 /**
  * Main function to start the web server and define API routes.
- *
- * cmd: cls; ./gradlew clean; ./gradlew jar; docker rmi -f apenas_estudo; docker rmi -f postgres; docker rm postgres-container; docker rm estudo-container; docker build -t apenas_estudo .; docker compose up
  */
 fun main() {
-  // Initializes the database before starting the web server.
+  // Initializes the database connection before starting the web server.
   MyDatabase.initialize(
-    username = System.getenv("POSTGRES_USER"),
-    password = System.getenv("POSTGRES_PASSWORD")
+    address = System.getenv("PG_ADDRESS"),
+    databaseName = System.getenv("PG_DATABASE"),
+    username = System.getenv("PG_USERNAME"),
+    password = System.getenv("PG_PASSWORD")
   )
 
   // Starts the embedded web server using Netty.

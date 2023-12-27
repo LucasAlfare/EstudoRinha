@@ -1,5 +1,6 @@
 plugins {
   kotlin("jvm") version "1.9.21"
+  id("io.ktor.plugin") version "2.3.7"
   kotlin("plugin.serialization") version "1.9.21"
 
   /*
@@ -32,6 +33,7 @@ dependencies {
   implementation("org.jetbrains.exposed:exposed-core:0.45.0")
   implementation("org.jetbrains.exposed:exposed-jdbc:0.45.0")
   implementation("org.postgresql:postgresql:42.6.0")
+  implementation("com.zaxxer:HikariCP:5.1.0")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
@@ -50,7 +52,7 @@ application {
 
 /*
 This specifies a custom task when creating a ".jar" for this project.
-The main thing is to define manifest and the fixing classpath stuff.
+The main thing is to define manifest and include all dependencies in the final `.jar`.
  */
 tasks.withType<Jar> {
   manifest {
@@ -58,7 +60,5 @@ tasks.withType<Jar> {
   }
 
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  configurations["compileClasspath"].forEach { file: File ->
-    from(zipTree(file.absoluteFile))
-  }
+  from(configurations.compileClasspath.map { config -> config.map { if (it.isDirectory) it else zipTree(it) } })
 }

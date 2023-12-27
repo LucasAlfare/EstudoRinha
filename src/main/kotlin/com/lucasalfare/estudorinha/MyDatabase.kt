@@ -1,5 +1,7 @@
 package com.lucasalfare.estudorinha
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -10,23 +12,26 @@ import java.util.*
  */
 object MyDatabase {
 
+  private lateinit var hikariDataSource: HikariDataSource
+
   /**
    * Initializes the database connection and creates tables if they don't exist.
    */
   fun initialize(
+    address: String,
+    databaseName: String,
     username: String,
     password: String
   ) {
-    Database.connect(
-      url = "jdbc:postgresql://localhost:5432/",
-      driver = "org.postgresql.Driver",
-      user = username,
+    hikariDataSource = createHikariDataSource(
+      jdbcUrl = "jdbc:postgresql://$address/$databaseName",
+      username = username,
       password = password
     )
 
-//    transaction { SchemaUtils.drop(PessoasTable, ConcatenationsTable) } // tmp
+    //    transaction(Database.connect(hikariDataSource)) { SchemaUtils.drop(PessoasTable, ConcatenationsTable) } // tmp
 
-    transaction {
+    transaction(Database.connect(hikariDataSource)) {
       SchemaUtils.createMissingTablesAndColumns(PessoasTable, ConcatenationsTable)
     }
   }
@@ -38,7 +43,7 @@ object MyDatabase {
    * @return Result object with the HTTP status code and the ID of the created person.
    */
   fun createPessoa(pessoaDTO: PessoaDTO): Result<UUID?> {
-    val createdPessoaId = transaction {
+    val createdPessoaId = transaction(Database.connect(hikariDataSource)) {
       PessoasTable.insertIgnoreAndGetId {
         it[nome] = pessoaDTO.nome!!
         it[apelido] = pessoaDTO.apelido!!
@@ -48,7 +53,7 @@ object MyDatabase {
     }
 
     return createdPessoaId?.let {
-      transaction {
+      transaction(Database.connect(hikariDataSource)) {
         ConcatenationsTable.insert {
           it[nomeApelidoStack] = buildString {
             append(pessoaDTO.nome)
@@ -69,7 +74,7 @@ object MyDatabase {
    * @return Result object with the HTTP status code and the retrieved person.
    */
   fun getPessoaById(id: UUID): Result<Pessoa?> {
-    val search = transaction {
+    val search = transaction(Database.connect(hikariDataSource)) {
       PessoasTable.select {
         PessoasTable.id eq id
       }.singleOrNull()
@@ -86,7 +91,7 @@ object MyDatabase {
    */
   fun searchPessoasByTerm(term: String): Result<List<Pessoa>> {
     // TODO: check performance for the following "double SELECT"...
-    val relatedPessoasIds = transaction {
+    val relatedPessoasIds = transaction(Database.connect(hikariDataSource)) {
       ConcatenationsTable.select {
         ConcatenationsTable.nomeApelidoStack like "%$term%"
       }.map { it[ConcatenationsTable.pessoaId] }
@@ -110,13 +115,28 @@ object MyDatabase {
    * @return Result object with the HTTP status code and the count of people as a string.
    */
   fun pessoasCount(): Result<String> {
-    val countText = transaction {
+    val countText = transaction(Database.connect(hikariDataSource)) {
       PessoasTable.selectAll().count().toString()
     }
 
     return Result(HttpStatusCode.OK, countText)
   }
 }
+
+private fun createHikariDataSource(
+  jdbcUrl: String,
+  username: String,
+  password: String
+) = HikariDataSource(HikariConfig().apply {
+  this.jdbcUrl = jdbcUrl
+  this.driverClassName = "org.postgresql.Driver" // always using postgres, then is fixed here
+  this.username = username
+  this.password = password
+  this.maximumPoolSize = 3
+  this.isAutoCommit = false
+  this.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+  this.validate()
+})
 
 /**
  * Extension function to convert a [ResultRow] to a [Pessoa] object.
