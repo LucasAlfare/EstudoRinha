@@ -123,20 +123,35 @@ object MyDatabase {
   }
 }
 
+/**
+ * Creates and configures a HikariCP DataSource for connecting to a PostgreSQL database.
+ *
+ * @param jdbcUrl The JDBC URL of the PostgreSQL database.
+ * @param username The username for authenticating the database connection.
+ * @param password The password for authenticating the database connection.
+ *
+ * @return A configured HikariDataSource instance.
+ */
 private fun createHikariDataSource(
   jdbcUrl: String,
   username: String,
   password: String
-) = HikariDataSource(HikariConfig().apply {
-  this.jdbcUrl = jdbcUrl
-  this.driverClassName = "org.postgresql.Driver" // always using postgres, then is fixed here
-  this.username = username
-  this.password = password
-  this.maximumPoolSize = 3
-  this.isAutoCommit = false
-  this.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-  this.validate()
-})
+): HikariDataSource {
+  val hikariConfig = HikariConfig().apply {
+    this.jdbcUrl = jdbcUrl
+    // Always using PostgreSQL, so the driverClassName is fixed here
+    this.driverClassName = "org.postgresql.Driver"
+    this.username = username
+    this.password = password
+    this.maximumPoolSize = 3
+    this.isAutoCommit = false
+    this.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+    this.validate()
+  }
+
+  // Creating a new HikariDataSource instance using the configured HikariConfig
+  return HikariDataSource(hikariConfig)
+}
 
 /**
  * Extension function to convert a [ResultRow] to a [Pessoa] object.
