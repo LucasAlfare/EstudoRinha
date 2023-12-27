@@ -90,18 +90,14 @@ fun main() {
 
         curl -v http://127.0.0.1:9999/pessoas/t=term
          */
-        get("/pessoas/t={termo}") {
-          runCatching {
-            // Retrieves people based on a search term from the database.
-            val term = call.parameters["termo"]!!
-            if (term.isEmpty()) return@get call.respond(HttpStatusCode.BadRequest)
+        get("/pessoas") {
+          val term = call.parameters["t"]
 
-            val result = MyDatabase.searchPessoasByTerm(term)
-            call.respond(HttpStatusCode.OK, result.data)
-          }.onFailure {
-            // Responds with a BadRequest status code and error message in case of failure.
-            call.respond(HttpStatusCode.BadRequest, it.message ?: "error")
-          }
+          // Retrieves people based on a search term from the database.
+          if (term.isNullOrEmpty()) return@get call.respond(HttpStatusCode.BadRequest)
+
+          val result = MyDatabase.searchPessoasByTerm(term)
+          call.respond(HttpStatusCode.OK, result.data)
         }
 
         /*

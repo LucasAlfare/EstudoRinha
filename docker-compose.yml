@@ -1,3 +1,4 @@
+# explicação network_mode=host: https://stackoverflow.com/a/63099775/4563960
 version: '3.8'
 
 services:
@@ -9,21 +10,26 @@ services:
     depends_on:
       meu-db:
         condition: service_healthy
-    ports:
-      - "9999:9999"
     environment:
+      #      PG_ADDRESS: localhost:5432
       PG_ADDRESS: meu-db
       PG_USERNAME: postgres
       PG_PASSWORD: postgres
       PG_DATABASE: estudorinha
     networks:
       - estudorinha-network
+    ports:
+      - "9999:9999"
+    #    network_mode: host
+    deploy:
+      resources:
+        limits:
+          cpus: '0.6'
+          memory: '1024MB'
 
   meu-db:
     container_name: estudorinha-postgres-container
-    image: postgres
-    ports:
-      - "5432:5432"
+    image: postgres:15-alpine
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready" ]
       interval: 3s
@@ -35,7 +41,14 @@ services:
       POSTGRES_DB: estudorinha
     networks:
       - estudorinha-network
+    ports:
+      - "5432:5432"
+    #    network_mode: host
+    deploy:
+      resources:
+        limits:
+          cpus: '0.85'
+          memory: '1792MB'
 
 networks:
   estudorinha-network:
-    driver: bridge

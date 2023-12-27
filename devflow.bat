@@ -13,7 +13,7 @@ call gradlew build
 call gradlew jar
 
 :: Remover todos os recursos relacionados ao Docker Compose, incluindo volumes
-call docker-compose down --volumes --rmi all
+call docker-compose down --volumes --rmi local
 
 :: Remover a imagem Docker existente do projeto
 :: call docker rmi estudorinha-image
