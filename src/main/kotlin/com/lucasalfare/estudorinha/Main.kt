@@ -27,7 +27,7 @@ fun main() {
   // Starts the embedded web server using Netty.
   embeddedServer(
     Netty,
-    port = 8080,
+    port = 9999,
     module = {
       // Installs Content Negotiation with a non-lenient JSON parser.
       install(ContentNegotiation) {
@@ -43,7 +43,7 @@ fun main() {
         /*
         Example request for testing:
 
-        curl -v -d '{"apelido": "lucas", "nome": "francisco lucas", "nascimento": "9999-99-99", "stack": ["kotlin", 1] }' -H 'Content-Type: application/json' http://127.0.0.1:8080/pessoas
+        curl -v -d '{"apelido": "lucas", "nome": "francisco lucas", "nascimento": "9999-99-99", "stack": ["kotlin", 1] }' -H 'Content-Type: application/json' http://127.0.0.1:9999/pessoas
          */
         post("/pessoas") {
           runCatching {
@@ -69,7 +69,7 @@ fun main() {
         /*
         Example request for testing:
 
-        curl -v http://127.0.0.1:8080/pessoas/UUID
+        curl -v http://127.0.0.1:9999/pessoas/UUID
         auxUUID = 01955196-2f8e-4678-8d42-859b309ec8f8
          */
         get("/pessoas/{id}") {
@@ -88,7 +88,7 @@ fun main() {
         /*
         Example request for testing:
 
-        curl -v http://127.0.0.1:8080/pessoas/t=term
+        curl -v http://127.0.0.1:9999/pessoas/t=term
          */
         get("/pessoas/t={termo}") {
           runCatching {
@@ -107,7 +107,7 @@ fun main() {
         /*
         Example request for testing:
 
-        curl -v http://127.0.0.1:8080/contagem-pessoas
+        curl -v http://127.0.0.1:9999/contagem-pessoas
          */
         get("/contagem-pessoas") {
           // Retrieves the count of people from the database.
